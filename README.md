@@ -13,6 +13,8 @@ AWS Lambda + .Net Core 2.1 Example
 6. Run: `zip -j ~/Desktop/output.zip ./DotNetCoreLambda/bin/Release/netcoreapp2.1/publish/*`
 7. Deploy out.zip
 
+HandlerName: DotNetCoreLambda::DotNetCoreLambda.Function::FunctionHandler
+
 ## LICENSE
 
 MIT
