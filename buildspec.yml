@@ -20,7 +20,7 @@ phases:
       - dotnet publish -c Release
       - zip -j ./package.zip ./DotNetCoreLambda/bin/Release/netcoreapp2.1/publish/*
       - aws s3 cp package.zip s3://chetan1123
-      - aws cloudformation update-stack --stack-name lambda-demo --use-previous-template 
+      - aws cloudformation update-stack --stack-name lambda-demo --use-previous-template --capabilities CAPABILITY_IAM
       
 artifacts:
   files:
