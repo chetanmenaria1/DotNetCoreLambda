@@ -8,7 +8,7 @@ namespace DotNetCoreLambda
     {
         public string FunctionHandler(string input, ILambdaContext context)
         {
-            return input?.ToUpper();
+            return input?.ToLower();
         }
     }
 }
