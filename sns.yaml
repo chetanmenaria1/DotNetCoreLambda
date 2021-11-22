@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Creates SNS topic, SNS subscription and Cloudwatch rule for Codebuild Notification
+Parameters:
+  SubscriptionEndPoint:
+    Type: String
+    Description: The endpoint that receives notifications.
+  SubscriptionProtocol:
+    Type: String
+    Description: The subscription protocol
+    AllowedValues:
+    - http
+    - https
+    - email
+    - email-json
+    - sms
+    - sqs
+    - application
+    - lambda
+    Default: email
+Mappings: {}
+Conditions: {}
+Resources:
+  SNSTopic:
+    Type: AWS::SNS::Topic
+    Properties: {}
+  SNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol:
+        Ref: SubscriptionProtocol
+      Endpoint:
+        Ref: SubscriptionEndPoint
+      TopicArn:
+        Ref: SNSTopic
+
+  SnsPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties: 
+      Topics: [!Ref SNSTopic]         
+      PolicyDocument: !Sub |
+          {
+            "Version": "2012-10-17",
+            "Id": "__default_policy_ID",
+            "Statement": [
+              {
+                "Sid": "__default_statement_ID",
+                "Effect": "Allow",
+                "Principal": {
+                  "AWS": "*"
+                },
+                "Action": [
+                  "SNS:GetTopicAttributes",
+                  "SNS:SetTopicAttributes",
+                  "SNS:AddPermission",
+                  "SNS:RemovePermission",
+                  "SNS:DeleteTopic",
+                  "SNS:Subscribe",
+                  "SNS:ListSubscriptionsByTopic",
+                  "SNS:Publish",
+                  "SNS:Receive"
+                ],
+                "Resource": "${SNSTopic}",
+                "Condition": {
+                  "StringEquals": {
+                    "AWS:SourceOwner": "${AWS::AccountId}"
+                  }
+                }
+              },
+              {
+                "Sid": "Allow EVENts",
+                "Effect": "Allow",
+                "Principal": {
+                  "Service": "events.amazonaws.com"
+                },
+                "Action": "sns:Publish",
+                "Resource": "${SNSTopic}"
+              }
+            ]
+          }
+
+
+  CodebuildStateFailureEventRule:
+    Type: "AWS::Events::Rule"
+    Properties:
+      Description: "Rule for sending failure notifications to SNS topic"
+      EventPattern:
+        source:
+          - aws.codebuild
+        detail-type:
+          - CodeBuild Build State Change
+        detail:
+          project-name:
+            - dotnet-demo
+          build-status:
+            - FAILED
+      State: "ENABLED"
+      Targets:
+       - Arn: !Ref SNSTopic
+         Id: CodeBuildNotificationTest
+         InputTransformer:
+            InputPathsMap:
+              build-id: "$.detail.build-id"
+              project-name: "$.detail.project-name"
+              build-status: "$.detail.build-status"
+              deep-link: "$.detail.additional-information.logs.deep-link"
+            InputTemplate: |
+              "Build '<build-id>' for build project '<project-name>' has reached the build status of '<build-status>'."
+Outputs:
+  QueueName:
+    Description: Name of the SNS Topic we created
+    Value:
+      Fn::GetAtt:
+      - SNSTopic
+      - TopicName
+  TopicARN:
+    Description: ARN of the SNS Topic we created
+    Value:
+      Ref: SNSTopic
