@@ -19,7 +19,7 @@ phases:
       # https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/dotnet-linux-platform-bundle-app.html
       - dotnet publish -c Debug
       - zip -j ./package.zip ./DotNetCoreLambda/bin/Debug/netcoreapp2.1/publish/*
-      - aws s3 cp package.zip s3://chetan1123/lambda/${CODEBUILD_BUILD_NUMBER}
+      - aws s3 cp package.zip s3://chetan1123/lambda/${CODEBUILD_BUILD_NUMBER}/
       - aws cloudformation update-stack --stack-name lambda-demo --use-previous-template --capabilities CAPABILITY_IAM
       
 artifacts:
