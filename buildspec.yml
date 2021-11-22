@@ -18,6 +18,8 @@ phases:
       - echo Publish started on `date`
       # https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/dotnet-linux-platform-bundle-app.html
       - dotnet publish -c Release
+      - zip -j ./package.zip ./DotNetCoreLambda/bin/Release/netcoreapp2.1/publish/*
+      - aws s3 cp package.zip s3://chetan1123
       
 artifacts:
   files:
