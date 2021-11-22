@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This Quick Start deploys CodePipeline for .NET Core
+Parameters:
+    BUILDNUMBER:
+        Description: Buld Number for lambda
+        Type: String
+
+Resources:
+  CodeBuildServiceRole:
+        Type: 'AWS::IAM::Role'
+        Properties:
+          AssumeRolePolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Principal:
+                  Service:
+                    - codebuild.amazonaws.com
+                Action: 'sts:AssumeRole'
+          Path: /
+          Policies:
+            - PolicyName: !Sub AWS-CodeBuild-Service-${AWS::StackName}
+              PolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                    - Effect: Allow
+                      Resource: '*'
+                      Action:
+                      - 'logs:CreateLogGroup'
+                      - 'logs:CreateLogStream'
+                      - 'logs:PutLogEvents'
+                    - Effect: Allow
+                      Resource:  '*'
+                      Action:
+                      - 's3:PutObject'
+                      - 's3:GetObject'
+                      - 's3:GetObjectVersion'
+                      - 's3:GetBucketAcl'
+                      - 's3:GetBucketLocation'
+                      - 'cloudformation:*'
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Effect: Allow
+            Resource: "*"
+          - Action:
+            - "s3:ListBucket"
+            Effect: Allow
+            Resource: "*"
+          - Action:
+            - "s3:GetObject"
+            Effect: Allow
+            Resource: "*"
+        PolicyName: LambdaRole
+
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: chetan1123
+        S3Key: !Join ['/', ['lambda' , !Ref BUILDNUMBER , 'package.zip' ]]
+      Handler: DotNetCoreLambda::DotNetCoreLambda.Function::FunctionHandler
+      MemorySize: 128
+      Role:
+        Fn::GetAtt:
+        - LambdaRole
+        - Arn
+      Runtime: dotnetcore2.1
+
