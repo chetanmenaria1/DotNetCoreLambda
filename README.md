@@ -1,4 +1,4 @@
-DotNetCoreLambda
+DotNetCoreLambda test
 =====
 
 AWS Lambda + .Net Core 2.1 Example
